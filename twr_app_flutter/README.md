@@ -1,16 +1,9 @@
 # twr_app_flutter
 
-A new Flutter project.
+A flutter app for the three-wheeled robot
 
-## Getting Started
+## Screens
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The joystick screen features a joystick to drive the robot. Move the speed slider to adjust driving speed
+The testing screen has inputs to drive indvidual motors and driving in specified directions with specified speeds.
+There are also some testing patterns to drive the robot
