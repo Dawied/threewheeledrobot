@@ -197,8 +197,8 @@ class _TestingScreenState extends State<TestingScreen> {
     double angle = 0;
     _timer = Timer.periodic(Duration(milliseconds: interval.toInt()), (Timer timer) async {
       double moveAngle = (450.0 - angle) % 360.0;
-      debugPrint("moveAngle: $moveAngle");
-      //await twr.sendMoveCmd(moveAngle.round(), speed, 2);
+      //debugPrint("moveAngle: $moveAngle");
+      await twr.sendMoveCmd(moveAngle.round(), speed, 2);
       angle += angleIncrement;
     });
   }
