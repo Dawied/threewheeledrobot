@@ -1,6 +1,6 @@
 # An Angular test page for the Three-wheelel Robot
 It features driving individual motors and drive with a virtual joystick. Communication is done with BLE using Web Bluetooth  https://webbluetoothcg.github.io/web-bluetooth/
-Work in current version of Chrome
+Tested and working in 125.0.6422.142 version of Chrome.
 
 
 # TwrApp
