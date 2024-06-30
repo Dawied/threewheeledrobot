@@ -1,4 +1,6 @@
-# This is the Threewheeled Robot aka TWR
+# Another Three-wheeled omnidirectional Robot
+
+![screenshot](images/twr-1.jpg)
 
 ### twr-esp32 
 Contains the platformio project for the ESP32 source. Tested and working for a esp32 wroom board
