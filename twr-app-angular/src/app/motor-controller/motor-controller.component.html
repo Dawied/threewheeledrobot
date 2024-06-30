@@ -1,0 +1,101 @@
+<div>
+
+  <div class="mt-3 mb-3">
+    <h3>Motor Control</h3>
+  </div>
+
+  <!-- Bluetooth state -->
+  <div class="row mb-3 align-items-center">
+    <div class="col-4">
+      <label>{{bleState}}</label>
+    </div>
+    <div class="col">
+        <button type="button" class="btn btn-primary me-2" (click)="onBLEConnectClick()">Connect</button>
+        <button type="button" class="btn btn-primary" (click)="onBLEDisconnectClick()">Disconnect</button>
+    </div>
+  </div>
+
+  <!-- Motor control-->
+  <div class="row mb-3">
+    <div class="col-sm-2">
+      <label for="motor-id" col-sm-2 col-form-label>Motor Id</label>
+      <input type="number" min="1" max="3" id="motor-id" name="motor-id" [(ngModel)]="motor.id" class="form-control">
+    </div>
+
+    <div class="col-sm-2">
+      <label for="motor-speed" col-sm-2 col-form-label>Motor Speed</label>
+      <input type="number" min="-255" max="255" id="motor-speed" name="motor-speed" [(ngModel)]="motor.speed"
+        class="form-control">
+    </div>
+
+    <div class="col-sm-2">
+      <label for="speed-type" col-sm-2 col-form-label>Speed type</label>
+      <select id="speed-type" name="speed-type" [(ngModel)]="motor.speedType"
+        class="form-control">
+        <option>PWM</option>
+        <option>RPM</option>
+      </select>
+    </div>
+
+    <div class="col-sm-2">
+      <button type="button" class="btn btn-primary mt-4" (click)="onSendMotorCmdClick()">Send</button>
+    </div>
+  </div>
+
+  <!-- Move -->
+  <div class="row mb-3">
+    <div class="col-sm-2">
+      <label for="move-direction-geodetic" col-sm-2 col-form-label>Direction</label>
+      <input type="number" id="move-direction-geodetic" name="move-direction-geodetic" [(ngModel)]="moveDirectionGeodetic" class="form-control">
+    </div>
+
+    <div class="col-sm-2">
+      <label for="move-speed" col-sm-2 col-form-label>Speed</label>
+      <input type="text" id="move-speed" name="move-speed" [(ngModel)]="moveSpeed" class="form-control">
+    </div>
+
+    <div class="col-sm-2">
+      <button type="button" class="btn btn-primary mt-4" (click)="onSendMoveCmdClick()">Move</button>
+    </div>
+
+    <div class="col-sm-2">
+      <label for="move-type" col-sm-2 col-form-label>Rotate to angle</label>
+      <input type="checkbox" id="move-type" name="move-type" [(ngModel)]="moveType">
+    </div>
+
+    <div class="col-sm-2">
+      <button type="button" class="btn btn-primary mt-4" (click)="onSendRotateCmdClick()">Rotate</button>
+    </div>
+
+    <div class="col-sm-2">
+      <button type="button" class="btn btn-danger mt-4" (click)="onSendStopCmdClick()">Stop</button>
+    </div>
+  </div>
+
+  <!-- dynamic variables -->
+  <div class="row mb-3">
+    <div class="col-sm-2">
+      <label for="dyn-var-name" col-sm-2 col-form-label>Variable</label>
+      <select id="dyn-var-name" name="dyn-var-name" [(ngModel)]="dynVarName"
+        class="form-control">
+        <option>kp</option>
+        <option>ki</option>
+        <option>kd</option>
+      </select>
+    </div>
+
+    <div class="col-sm-2">
+      <label for="dyn-var-value" col-sm-2 col-form-label>Value</label>
+      <input type="text" id="dyn-var-value" name="dyn-var-value" [(ngModel)]="dynVarValue" class="form-control">
+    </div>
+
+    <div class="col-sm-2">
+      <button type="button" class="btn btn-primary mt-4" (click)="onSendDynVarClick()">Send</button>
+    </div>
+  </div>
+
+  <!-- Joystick -->
+  <div id="joyDiv"></div>
+
+</div>
+

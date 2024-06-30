@@ -1,0 +1,127 @@
+#include <Arduino.h>
+#include <streaming.h>
+
+uint16_t IN1 = 27;     // pin input 1    
+uint16_t IN2 = 14;     // pin input 2    
+uint16_t PWM = 12;    // pin PWM control
+uint16_t STBY = 21;   // pin standby 
+
+int pwmChannel = 0;
+int freq = 100000;
+
+const uint16_t ANALOG_WRITE_BITS = 8;
+char cmd;
+int curSpeed = 0;
+int minSpeed = 75;
+int maxSpeed = 255;
+int incSpeed = 10;
+const int STOP = 0;
+const int FORWARD = 1;
+const int BACKWARD = 2;
+int direction = STOP;
+
+void serialMotorInput();
+void motorControl(int speed);
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial);
+  Serial << "Started" << endl << endl;
+
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+
+  ledcSetup(pwmChannel, freq, ANALOG_WRITE_BITS);
+  ledcAttachPin(PWM, pwmChannel);
+
+  pinMode(STBY, OUTPUT);
+
+  //Set standby for all motors to HIGH
+  digitalWrite(STBY, HIGH);
+}
+
+void loop() {
+  serialMotorInput();
+  delay(100);
+}
+
+void serialMotorInput()
+{
+  cmd = Serial.read();
+
+  // change motor
+  // forward
+  if (cmd == '4')
+  {
+    // reset speed
+    if (direction == BACKWARD || direction == STOP)
+    {
+      curSpeed = minSpeed;
+    }
+    else
+    {
+      curSpeed += incSpeed;
+    }
+    direction = FORWARD;
+
+    motorControl(curSpeed);
+
+    Serial << "Forward " << curSpeed << endl;
+  }
+
+  // backward
+  if (cmd == '5')
+  {
+    // reset speed
+    if (direction == FORWARD || direction == STOP)
+    {
+      curSpeed = minSpeed;
+    }
+    else
+    {
+      curSpeed += incSpeed;
+    }
+    direction = BACKWARD;
+
+    motorControl(-curSpeed);
+    Serial << "Backward " << curSpeed << endl;
+  }
+
+  // stop
+  if (cmd == '6')
+  {
+    motorControl(0);
+
+    direction = STOP;
+    curSpeed = 0;
+
+    Serial << "Stop " << endl;
+  }
+}
+
+void motorControl(int speed)
+{
+  Serial << "speed: " << speed << endl;
+  // cw
+  if (speed > 0)
+  {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    ledcWrite(pwmChannel, speed);
+  }
+  // ccw
+  else if (speed < 0)
+  {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH);
+    ledcWrite(pwmChannel, -speed);
+  }
+  // stop
+  else
+  {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+  }
+}
+
+
