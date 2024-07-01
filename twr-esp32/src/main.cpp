@@ -166,6 +166,7 @@ void processBlueTooth();
 void moveRobot(float targetAngle, float speed, bool turnToTargetAngle, float& ws1, float& ws2, float& ws3);
 void rotateRobot(float targetAngle, float speed, float& ws1, float& ws2, float& ws3);
 int calculateRotateDirection(float targetAngle);
+float calculateRotateSpeed(float targetAngle, float speed);
 void setWheelSpeeds();
 void stopMotors();
 void IRAM_ATTR onMPUInterrupt();
@@ -350,23 +351,27 @@ void moveRobot(float targetAngle, float speed, bool turnToTargetAngle, float& ws
   float Vx_prime = Vx * cos(curYaw) - Vy * sin(curYaw);
   float Vy_prime = Vx * sin(curYaw) + Vy * cos(curYaw);
 
-  float rotationalSpeed = 0;
+  float rotateSpeed = 0;
 
   // Calculate the rotational speed to rotate to targetAngle while moving
-  if (turnToTargetAngle && abs(targetAngle - cartesianYaw) > 1)
+  if (turnToTargetAngle)
   {
     int direction = calculateRotateDirection(targetAngle);
-    float speedFactor = abs(targetAngle - cartesianYaw) / 360 * speed * 50;
-
-    rotationalSpeed = direction * speedFactor;
+    rotateSpeed = calculateRotateSpeed(targetAngle, speed) * direction;
+    Serial << "rotateSpeed: " << rotateSpeed << endl;
   }
 
   // Calculate wheel velocities
   // 0.5 = cos(120)
   // sqrt(3)/2 = sin(120)
-  ws1 = Vx_prime + rotationalSpeed * wheelRadius;
-  ws2 = (-0.5 * Vx_prime - (sqrt(3) / 2) * Vy_prime) + rotationalSpeed * wheelRadius;
-  ws3 = (-0.5 * Vx_prime + (sqrt(3) / 2) * Vy_prime) + rotationalSpeed * wheelRadius;
+  ws1 = Vx_prime;
+  ws2 = (-0.5 * Vx_prime - (sqrt(3) / 2) * Vy_prime);
+  ws3 = (-0.5 * Vx_prime + (sqrt(3) / 2) * Vy_prime);
+
+  // add rotational speed needed to turn north side to targetAngle
+  ws1 += rotateSpeed;
+  ws2 += rotateSpeed;
+  ws3 += rotateSpeed;
 
   if (debug) Serial
     << "targetAngle: " << targetAngle
@@ -388,11 +393,29 @@ void rotateRobot(float targetAngle, float speed, float& ws1, float& ws2, float& 
 {
   int direction = calculateRotateDirection(targetAngle);
 
-  // Keep turning the wheel in the desired direction until thresshold of 1 degree is reached.
-  float wheelSpeed = 0;
+  float rotateSpeed = calculateRotateSpeed(targetAngle, speed) * direction;
 
-  // Slow down within 5 degrees of the target
+  if (rotateSpeed == 0)
+  {
+    driveType = DRIVE_TYPE_STOP;
+  }
+
+  ws1 = ws2 = ws3 = rotateSpeed;
+
+  if (debug) Serial
+    << "targetAngle: " << targetAngle
+    << " cartesianYaw: " << cartesianYaw
+    << " speed: " << speed
+    << " wheelSpeed: " << rotateSpeed
+    << endl;
+}
+
+float calculateRotateSpeed(float targetAngle, float speed) 
+{
+  // Slow down within 10 degrees of the target
   float speedFactor = 1.0;
+  float rotateSpeed = 0;
+
   if (abs(targetAngle - cartesianYaw) < 10)
   {
     speedFactor = abs(targetAngle - cartesianYaw) / 360;
@@ -400,24 +423,10 @@ void rotateRobot(float targetAngle, float speed, float& ws1, float& ws2, float& 
 
   if (abs(targetAngle - cartesianYaw) > 1)
   {
-    float rotateSpeed = min(max(speed * speedFactor, (float)10), (float)200);
-    wheelSpeed = direction * rotateSpeed;
-  }
-  else
-  {
-    wheelSpeed = 0;
-    driveType = DRIVE_TYPE_STOP;
+    rotateSpeed = min(max(speed * speedFactor, (float)10), (float)200);
   }
 
-  ws1 = ws2 = ws3 = wheelSpeed;
-
-  if (debug) Serial
-    << "targetAngle: " << targetAngle
-    << " cartesianYaw: " << cartesianYaw
-    << " speed: " << speed
-    << " speedFactor: " << speedFactor
-    << " wheelSpeed: " << wheelSpeed
-    << endl;
+  return rotateSpeed;
 }
 
 /**
