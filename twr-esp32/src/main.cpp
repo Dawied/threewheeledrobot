@@ -23,7 +23,7 @@
 #endif
 #include <MotorControl.h>
 
-bool debug = true;
+bool debug = false;
 
 std::map<String, float> dynVars;
 
@@ -78,25 +78,25 @@ int moveType = MOVE_TYPE_FIXED;
 
 MotorControl motors[] = {
   MotorControl(
-    33,    // pin input 1    
-    25,    // pin input 2    
-    26,    // pin PWM control
+    27,    // pin input 1    
+    14,    // pin input 2    
+    12,    // pin PWM control
     34,    // pin encoder C2
     1,     // PWM Channel
     debug
   ),
   MotorControl(
-    0,     // pin input 1    
-    2,     // pin input 2    
-    15,    // pin PWM control
+    33,     // pin input 1    
+    25,     // pin input 2    
+    26,    // pin PWM control
     17,    // pin encoder C2
     2,     // PWM Channel
     debug
   ),
   MotorControl(
-    27,    // pin input 1    
-    14,    // pin input 2    
-    12,    // pin PWM control
+    0,    // pin input 1    
+    2,    // pin input 2    
+    15,    // pin PWM control
     35,    // pin encoder C2
     3,     // PWM Channel
     debug
@@ -281,12 +281,9 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
 };
 
 void setup() {
-  if (debug)
-  {
-    Serial.begin(115200);
-    while (!Serial);
-    Serial << "Started" << endl << endl;
-  }
+  Serial.begin(115200);
+  while (!Serial);
+  Serial << "Started" << endl << endl;
 
   setupDynVars();
   setupMPU6050();
@@ -357,7 +354,7 @@ void moveRobot(float targetAngle, float speed, bool turnToTargetAngle, float& ws
   if (turnToTargetAngle)
   {
     int direction = calculateRotateDirection(targetAngle);
-    rotateSpeed = calculateRotateSpeed(targetAngle, speed) * direction;
+    rotateSpeed = calculateRotateSpeed(targetAngle, 50) * direction;
     Serial << "rotateSpeed: " << rotateSpeed << endl;
   }
 
@@ -395,8 +392,9 @@ void rotateRobot(float targetAngle, float speed, float& ws1, float& ws2, float& 
 
   float rotateSpeed = calculateRotateSpeed(targetAngle, speed) * direction;
 
-  if (rotateSpeed == 0)
+  if (abs(targetAngle - cartesianYaw) < 0.5)
   {
+    rotateSpeed = 0;
     driveType = DRIVE_TYPE_STOP;
   }
 
@@ -425,6 +423,12 @@ float calculateRotateSpeed(float targetAngle, float speed)
   {
     rotateSpeed = min(max(speed * speedFactor, (float)10), (float)200);
   }
+
+  return rotateSpeed;
+
+  Serial 
+    << "speed: " << rotateSpeed 
+    << endl;
 
   return rotateSpeed;
 }
@@ -457,12 +461,22 @@ int calculateRotateDirection(float targetAngle)
 /**
  * @brief set the targetRPM and direction (cw, ccw) of the wheels
  *
- *
- * @param angle desired angle in degrees
- * @param speed
  */
 void setWheelSpeeds()
 {
+  // Reduce speeds equaly if one of them is greater than maxRPM
+  double maxRPM = 200;
+  double reduction = 1;
+  double maxSpeed = max(ws1, max(ws2, ws3));
+
+  if (maxSpeed > maxRPM) 
+  {
+    reduction = maxRPM / maxSpeed;
+    ws1 *= reduction;
+    ws2 *= reduction;
+    ws3 *= reduction;
+  }
+
   // Set the motor speeds
   motors[0].speedType = SPEED_TYPE_RPM;
   motors[0].direction = ws1 > 0 ? CW : CCW;
