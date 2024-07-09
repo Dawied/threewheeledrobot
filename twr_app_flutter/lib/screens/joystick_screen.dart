@@ -8,6 +8,7 @@ import '../utils/bluetooth_manager.dart';
 import '../utils/snackbar.dart';
 import 'package:flutter_joystick/flutter_joystick.dart';
 import 'package:flutter_compass/flutter_compass.dart';
+import 'package:wifi_iot/wifi_iot.dart';
 
 class JoystickScreen extends StatefulWidget {
   const JoystickScreen({super.key});
@@ -28,6 +29,8 @@ class _JoystickScreenState extends State<JoystickScreen> {
   // Event listener for Compass
   StreamSubscription<CompassEvent>? _compassSubscription;
 
+  late WebViewController webViewController;
+
   bool _stopped = true;
 
   /// initState()
@@ -38,7 +41,6 @@ class _JoystickScreenState extends State<JoystickScreen> {
     _btmSubscription = btm.events.listen((event) {
       if (mounted) {
         setState(() {});
-
       }
     });
 
@@ -50,13 +52,58 @@ class _JoystickScreenState extends State<JoystickScreen> {
     if (!isConnected) {
       btm.onToggleConnect();
     }
+
+    /// WebView
+    webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            // Update loading bar.
+          },
+          onPageStarted: (String url) {
+            //debugPrint("WebView onPageStarted");
+          },
+          onPageFinished: (String url) {
+            //debugPrint("WebView onPageFinished");
+          },
+          onHttpError: (HttpResponseError error) {
+            // retry connectCamera()
+            connectCamera();
+          },
+          onWebResourceError: (WebResourceError error) {
+            // retry connectCamera()
+            connectCamera();
+          },
+          onNavigationRequest: (NavigationRequest request) {
+            //debugPrint("WebView onNavigationRequest");
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..loadHtmlString("<div style='text-align: center; font-size: 50px; margin-top: 150px;'>Waiting for camera stream...</div>");
+
+    connectCamera();
   }
 
+  Future<void> connectCamera() async {
+    bool connected = false;
+    String? ssid = await WiFiForIoTPlugin.getSSID();
+    if (ssid != "twrcamera") {
+      await WiFiForIoTPlugin.connect("twrcamera", password: "IwwodTWRCAMNu!", joinOnce: true, security: NetworkSecurity.WPA);
+    }
+
+    Future.delayed(const Duration(seconds: 3), () {
+      webViewController.loadRequest(Uri.parse("http://192.168.4.1:81/view"));
+    });
+  }
   /// dispose()
   @override
   void dispose() {
     _btmSubscription?.cancel();
     _compassSubscription?.cancel();
+    //WiFiForIoTPlugin.disconnect();
     super.dispose();
   }
 
@@ -154,33 +201,6 @@ class _JoystickScreenState extends State<JoystickScreen> {
   }
 
   /// Webview
-  WebViewController webViewController = WebViewController()
-    ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..setBackgroundColor(const Color(0x00000000))
-    ..setNavigationDelegate(
-      NavigationDelegate(
-        onProgress: (int progress) {
-          // Update loading bar.
-        },
-        onPageStarted: (String url) {
-          //debugPrint("WebView onPageStarted");
-        },
-        onPageFinished: (String url) {
-          //debugPrint("WebView onPageFinished");
-        },
-        onHttpError: (HttpResponseError error) {
-          //debugPrint("WebView onHttpError");
-        },
-        onWebResourceError: (WebResourceError error) {
-          //debugPrint("WebView onWebResourceError");
-        },
-        onNavigationRequest: (NavigationRequest request) {
-          //debugPrint("WebView onNavigationRequest");
-          return NavigationDecision.navigate;
-        },
-      ),
-    )
-    ..loadRequest(Uri.parse('https://www.nu.nl'));
 
   /// Compass
   int _lastCompassEvent = DateTime.now().millisecond;

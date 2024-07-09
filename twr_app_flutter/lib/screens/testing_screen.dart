@@ -255,7 +255,7 @@ class _TestingScreenState extends State<TestingScreen> {
                         onPressed: _sendStopCmd,
                         icon: const Icon(Icons.cancel),
                         iconSize: 50,
-                        color: Colors.red)
+                        color: Colors.red),
                   ],
                 )
               ],
